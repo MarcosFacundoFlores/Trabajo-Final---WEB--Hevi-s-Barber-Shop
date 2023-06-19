@@ -1,63 +1,61 @@
-<template class="whole-content">
-  <div > 
-    <Header @navigate="switchView" />
-    <div class="centered-container">
-      <div class="content">
-        <DefaultView v-if="currentView === 'default'" />
-        <InfoView v-if="currentView === 'info'" />
-        <ShopView v-if="currentView === 'shop'" />
+<template>
+      <div class="image-container">
+        <img
+          class="centered-image image image-sillon"
+          src="../assets/sillon.png"
+          alt="Sillón"
+          @mouseenter="handleImageHover(true)"
+          @mouseleave="handleImageHover(false)"
+          @click="openModal"
+        />
       </div>
-    </div>
-  </div>
-</template>
+      <div class="image-text" v-if="isImageHovered">Pedi tu turno</div>
+      <div class="image-container">
+        <img
+          class="centered-image image image-zapatillas"
+          src="../assets/sneakers.png"
+          alt="Second Image"
+          @mouseenter="handleSecondImageHover(true)"
+          @mouseleave="handleSecondImageHover(false)"
+        />
+      </div>
+      <div class="image-text" v-if="isSecondImageHovered">Shop Zapatillas</div>
+
+    <div class="overlay" :class="{ dimmed: isImageHovered || isSecondImageHovered }"></div>
+    <Modal ref="modal"></Modal>
+  </template>
 
 <script>
 import Header from '../components/HeaderComponent.vue'
-import DefaultView from './DefaultView.vue'
-import InfoView from './InfoView.vue'
-import ShopView from './ShopView.vue'
+import Modal from '../components/ModalComponent.vue'
 
 export default {
   components: {
     Header,
-    DefaultView,
-    InfoView,
-    ShopView
+    Modal
   },
   data() {
     return {
-      currentView: 'default'
+      isImageHovered: false,
+      isSecondImageHovered: false,
     }
   },
   methods: {
-    switchView(view) {
-      this.currentView = view;
+    handleImageHover(isHovered) {
+      this.isImageHovered = isHovered
+    },
+    handleSecondImageHover(isHovered) {
+      this.isSecondImageHovered = isHovered
+    },
+    openModal() {
+        this.$refs.modal.openModal();
     }
   }
 }
 </script>
-
-
+  
 <style>
 /* Estilos adicionales si es necesario */
-body{
-  overflow-y: hidden;
-}
-
-.content {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: calc(100vh - 60px); /* Ajusta la altura según el tamaño del header */
-}
-
-.centered-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
 
 .centered-image {
   display: block;
