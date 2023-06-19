@@ -4,7 +4,7 @@
       <img class="logo" :src="logo" alt="Logo" />
     </div>
     <nav>
-      <button class="btn btn-primary header-button" @click="navigate('turnos')">TURNOS</button>
+      <button class="btn btn-primary header-button" @click="navigate('default')">TURNOS</button>
       <button class="btn btn-primary header-button" @click="navigate('shop')">SHOP</button>
       <button class="btn btn-primary header-button" @click="navigate('info')">INFO</button>
     </nav>
