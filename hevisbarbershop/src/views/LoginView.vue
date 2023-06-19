@@ -1,4 +1,3 @@
-hevisbarbershop/src/views/LoginView.vue
 <template>
   <div class="app-container">
     <div class="login-view">
@@ -7,38 +6,78 @@ hevisbarbershop/src/views/LoginView.vue
       </div>
 
       <div class="buttons-container">
-        <div v-if="showForm">
-          <form class="form-container" @submit="submitForm">
+        <div>
+          <form class="form-container" @submit.prevent="submitForm">
             <div class="input-container">
-              <input type="text" placeholder="Username" class="input-field" required />
+              <input v-model="username" type="text" placeholder="Usuario" class="input-field" required />
             </div>
             <div class="input-container">
-              <input type="password" placeholder="Password" class="input-field" required />
+              <input v-model="password" type="password" placeholder="Contraseña" class="input-field" required />
             </div>
-            <button type="submit" class="btn submit-button button">Submit</button>
+            <button type="submit" class="btn submit-button button">Ingresar</button>
+            <button @click.prevent="registerUser" class="btn register-button button">Registrarse</button>
           </form>
         </div>
-        <button v-else class="btn login-button button" @click="showForm = true">Ingresar</button>
-        <button v-if="!showForm" class="btn register-button button">Registrarse</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
-      showForm: false
-    }
+      username: '',
+      password: '',
+    };
   },
   methods: {
     submitForm() {
-      // Handle form submission logic here
-    }
-  }
-}
+      axios
+        .post('/api/login', {
+          username: this.username,
+          password: this.password,
+        })
+        .then((response) => {
+          // Check if the response contains a redirect URL
+          const redirectUrl = response.headers['x-redirect'];
+          if (redirectUrl) {
+            // Redirect to the specified URL
+            this.$router.push(redirectUrl);
+          } else {
+            // Handle login error, show an error message, etc.
+            alert('Login failed. Invalid credentials.');
+          }
+        })
+        .catch((error) => {
+          // Handle login error, show an error message, etc.
+          alert('An error occurred. Please try again later.');
+        });
+    },
+    registerUser() {
+      // Handle registration logic
+      // You can make an API request to your backend to register the user
+      // Here's an example using Axios:
+      axios
+        .post('/api/register', {
+          username: this.username,
+          password: this.password,
+        })
+        .then((response) => {
+          // If the registration request is successful, show a success message
+          alert('Registro exitoso! Use sus datos para ingresar');
+        })
+        .catch((error) => {
+          // Handle registration error, show an error message, etc.
+          alert('An error occurred. Please try again later.');
+        });
+    },
+  },
+};
 </script>
+
 
 <style scoped>
 .app-container {
