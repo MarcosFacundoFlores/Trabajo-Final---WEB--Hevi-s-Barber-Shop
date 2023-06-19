@@ -1,4 +1,4 @@
-<template class="whole-content">
+<template>
   <div > 
     <Header @navigate="switchView" />
     <div class="centered-container">
@@ -77,48 +77,4 @@ export default {
   background-color: rgba(0, 0, 0, 0.5); /* Adjust the opacity to control the level of dimming */
 }
 
-.image-container {
-  position: relative;
-  flex: 1; /* Distribute available space evenly among image containers */
-}
-
-.image {
-  cursor: pointer;
-  transition: filter 0.3s ease;
-  position: relative;
-}
-
-.image-zapatillas {
-  max-width: 60%;
-  max-height: auto;
-  transform: translate(-10%, -15%);
-}
-
-.image-sillon {
-  max-width: 40%;
-  max-height: auto;
-  transform: translateY(-5%);
-}
-
-.image-zapatillas:hover {
-  z-index: 2;
-}
-
-.image-sillon:hover {
-  z-index: 2;
-}
-
-.image-text {
-  position: absolute;
-  left: 45%;
-  top: 20%;
-  text-align: center;
-  font-size: 24px; /* Increase the font size for better readability */
-  font-weight: bold; /* Add font-weight for emphasis */
-  color: white;
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 10px 20px; /* Increase padding for better visibility */
-  border-radius: 5px;
-  z-index: 2;
-}
 </style>

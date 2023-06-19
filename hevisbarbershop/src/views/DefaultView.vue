@@ -17,6 +17,7 @@
           alt="Second Image"
           @mouseenter="handleSecondImageHover(true)"
           @mouseleave="handleSecondImageHover(false)"
+          @click="openShop"
         />
       </div>
       <div class="image-text" v-if="isSecondImageHovered">Shop Zapatillas</div>
@@ -49,6 +50,9 @@ export default {
     },
     openModal() {
         this.$refs.modal.openModal();
+    },
+    openShop(){
+      this.$emit('navigate', 'shop');
     }
   }
 }

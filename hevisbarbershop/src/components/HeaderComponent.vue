@@ -4,7 +4,7 @@
       <img class="logo" :src="logo" alt="Logo" />
     </div>
     <nav>
-      <button class="btn btn-primary header-button" @click="navigate('default')">TURNOS</button>
+      <button class="btn btn-primary header-button" @click="navigate('turnos')">TURNOS</button>
       <button class="btn btn-primary header-button" @click="navigate('shop')">SHOP</button>
       <button class="btn btn-primary header-button" @click="navigate('info')">INFO</button>
     </nav>
@@ -23,17 +23,16 @@ export default {
   },
   methods: {
     navigate(page) {
-      this.$emit('navigate', page);
+      this.$emit('navigate', page)
     },
     logout() {
-      console.log('Salir');
+      console.log('Salir')
     }
   }
 }
 </script>
 
-
-<style scoped>
+<style>
 /* Estilos CSS adicionales si es necesario */
 header {
   display: flex;
@@ -59,12 +58,15 @@ header {
   cursor: pointer;
   padding: 10px 20px; /* Aumenta el padding para hacer los botones más grandes */
   transition: background-color 0.3s ease-in-out;
+  font-size: 1.2rem;
+  transform: scale(1.2);
 }
 
 .header-button:hover {
   background-color: #2F2821;
   color: #fff;
 }
+
 
 .header-button:not(:last-child) {
   margin-right: 50px;
