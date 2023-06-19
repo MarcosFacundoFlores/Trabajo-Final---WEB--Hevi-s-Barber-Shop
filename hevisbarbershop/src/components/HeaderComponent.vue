@@ -33,7 +33,7 @@ export default {
 </script>
 
 
-<style>
+<style scoped>
 /* Estilos CSS adicionales si es necesario */
 header {
   display: flex;
@@ -53,8 +53,17 @@ header {
 }
 
 .header-button {
-  margin-left: 5px;
-  transform: scale(1.5); /* Aumentar el tamaño en un 100% */
+  background-color: transparent;
+  color: #866149;
+  border: none;
+  cursor: pointer;
+  padding: 10px 20px; /* Aumenta el padding para hacer los botones más grandes */
+  transition: background-color 0.3s ease-in-out;
+}
+
+.header-button:hover {
+  background-color: #2F2821;
+  color: #fff;
 }
 
 .header-button:not(:last-child) {

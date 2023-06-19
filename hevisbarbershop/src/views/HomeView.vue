@@ -40,9 +40,6 @@ export default {
 
 <style>
 /* Estilos adicionales si es necesario */
-body{
-  overflow-y: hidden;
-}
 
 .content {
   position: relative;

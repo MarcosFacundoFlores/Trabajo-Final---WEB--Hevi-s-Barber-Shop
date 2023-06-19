@@ -24,6 +24,7 @@ body {
 
 html,
 body {
+  overflow-y: hidden;
   height: 100%;
   margin: 0;
   overflow-x: hidden; /* Ocultar el scroll horizontal */

@@ -1,13 +1,17 @@
 <template>
     <div class="eshop">
-        <h1 class="title">E-Shop</h1>
+      <h1 class="title">E-Shop</h1>
       <main>
-        <div class="product" v-for="(product, index) in products" :key="index">
-          <img class="product-image" :src="product.image" :alt="product.name" />
-          <div>
-            <h2 class="product-title">{{ product.name }}</h2>
-            <p class="product-price">$ {{ product.price }}</p>
-            <button class="button" @click="addToCart(index)">Add to Cart</button>
+        <div class="row">
+          <div class="col-md-4" v-for="(product, index) in products" :key="index">
+            <div class="product">
+              <img class="product-image" :src="product.image" :alt="product.name" />
+              <div>
+                <h2 class="product-title">{{ product.name }}</h2>
+                <p class="product-price">$ {{ product.price }}</p>
+                <button class="button" @click="addToCart(index)">Add to Cart</button>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -58,28 +62,9 @@
     text-align: center;
   }
   
-  h1 {
-    margin: 0;
-    font-size: 2rem;
-  }
-  
-  main {
-    padding: 20px;
-  }
-  
-  .product-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-  }
   
   .product {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     text-align: center;
-    width: 200px;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 4px;
