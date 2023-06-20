@@ -19,6 +19,7 @@ import DefaultView from './DefaultView.vue'
 import InfoView from './InfoView.vue'
 import ShopView from './ShopView.vue'
 import axios from 'axios';
+import { EventBus } from '../EventBus';
 
 export default {
   components: {
@@ -49,6 +50,11 @@ export default {
       .catch(error => {
         console.log(error);
       });
+
+    // Listen to the "navigate" event from the event bus
+    EventBus.on('navigate', (page) => {
+      this.currentView = page;
+    });
   }
 }
 </script>

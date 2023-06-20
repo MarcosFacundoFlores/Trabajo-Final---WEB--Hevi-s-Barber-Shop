@@ -1,75 +1,153 @@
 <template>
-  <div class="modal" :class="{ 'show': isOpen }">
+  <div class="modal" :class="{ show: isOpen }">
     <div class="modal-dialog">
       <div class="modal-content">
-        <form @submit.prevent="submitForm">
-          <div class="modal-header">
-            <span></span>
-            <button type="button" class="close" @click="closeModal">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <VueDatePicker
-                id="datePicker"
-                class="form-control"
-                v-model="date"
-                :flow="flow"
-                :timepicker-options="timepickerOptions"
-                inline
-                auto-apply
-              />
+        <div class="modal-header">
+          <span></span>
+          <button type="button" class="close" @click="closeModal">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-6">
+                <h3>Selecciona una fecha:</h3>
+                <div class="calendar-container">
+                  <VueDatePicker
+                    v-model="selectedDate"
+                    minutes-increment="30"
+                    time-picker-inline
+                    no-hours-overlay
+                    no-minutes-overlay
+                    inline
+                    locale="es-ES"
+                    :flow="flow"
+                    :min-date="startDate"
+                    :max-date="endDate"
+                    :min-time="minTime"
+                    :max-time="maxTime"
+                    :disabled-week-days="[0]"
+                    :disabled-times="isTimeDisabled"
+                  ></VueDatePicker>
+                </div>
+              </div>
             </div>
-            <div class="text-center">
-              <button type="submit" class="btn btn-primary btn-lg confirm-button">Confirm</button>
-            </div>
-            <slot></slot>
           </div>
-        </form>
+        </div>
+        <slot></slot>
       </div>
     </div>
   </div>
 </template>
 
-
-
-
-
 <script>
-import VueDatePicker from '@vuepic/vue-datepicker';
+import VueDatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-
+import moment from 'moment'
+import axios from 'axios'
 
 export default {
   name: 'Modal',
+  components: {
+    VueDatePicker
+  },
   data() {
     return {
       isOpen: false,
-      date: null,
+      selectedDate: null,
+      userId: null,
       flow: ['calendar', 'time'],
-      timepickerOptions: {
-        showMinutes: false,
-        showSeconds: false,
-        showMeridian: false,
-      },
-    };
+      startDate: new Date(),
+      endDate: new Date(new Date().setDate(new Date().getDate() + 31)),
+      minTime: { hours: 9, minutes: 0 },
+      maxTime: { hours: 21, minutes: 0 },
+      isTimeDisabled: null,
+      disabledTimes: []
+    }
+  },
+  mounted() {
+    this.fetchDisabledDates()
+    this.fetchUserId()
+    this.fetchDisabledTimes()
   },
   methods: {
+    fetchDisabledTimes() {
+      axios
+        .get('/api/turnos')
+        .then((response) => {
+          this.disabledTimes = response.data.map((turno) => {
+            const fecha = new Date(turno.fecha)
+            const formattedTime = fecha.getHours() + ':' + fecha.getMinutes()
+            return formattedTime
+          })
+        })
+        .catch((error) => {
+          console.error('Error fetching disabled times:', error)
+        })
+    },
+
+    isTimeDisabled(value) {
+      const hour = value.hours
+      const minutes = value.minutes
+      const formattedTime = hour + ':' + minutes
+      return (
+        hour >= 13 &&
+        hour < 17 && // Disable hours between 13:00 and 17:00
+        minutes !== 0 &&
+        minutes !== 30 && // Disable times with minutes other than 00 or 30
+        this.disabledTimes.includes(formattedTime) // Disable times that are already stored in the database
+      )
+    },
+
+    fetchUserId() {
+      axios
+        .get('/api/userId') // Ruta para obtener el ID del usuario en sesión
+        .then((response) => {
+          this.userId = response.data.userId
+        })
+        .catch((error) => {
+          console.error('Error al obtener el ID del usuario:', error)
+        })
+    },
+    fetchDisabledDates() {
+      axios
+        .get('/api/turnos')
+        .then((response) => {
+          this.disabledDates = response.data.map((turno) => turno.fecha)
+        })
+        .catch((error) => {
+          console.error('Error al obtener las fechas deshabilitadas:', error)
+        })
+    },
+    confirmarTurno() {
+      console.log(this.selectedDate)
+      const formattedHora = moment(this.selectedTime, 'h:mm A').format('HH:mm')
+      const formattedFecha = moment(this.selectedDate).format('YYYY-MM-DD')
+      const nuevoTurno = {
+        fecha: formattedFecha,
+        hora: formattedHora,
+        usuario: this.userId // Agrega el ID del usuario al objeto nuevoTurno
+      }
+
+      axios
+        .post('/api/turnos', nuevoTurno)
+        .then((response) => {
+          console.log(response.data.mensaje) // Mensaje de confirmación del servidor
+          // Realiza cualquier acción adicional después de confirmar el turno
+        })
+        .catch((error) => {
+          console.error('Error al confirmar el turno:', error)
+        })
+    },
     openModal() {
-      this.isOpen = true;
+      this.isOpen = true
     },
     closeModal() {
-      this.isOpen = false;
-    },
-    submitForm() {
-      console.log(this.date);
-    },
-  },
-  components: {
-    VueDatePicker,
-  },
-};
+      this.isOpen = false
+    }
+  }
+}
 </script>
 
 <style>
@@ -85,6 +163,10 @@ export default {
   background-color: rgba(47, 40, 33, 0.5); /* #2F2821 */
 }
 
+.calendar-container {
+  margin-top: 10px;
+}
+
 .modal.show {
   display: flex;
   z-index: 2;
@@ -93,13 +175,13 @@ export default {
 .modal-dialog {
   max-width: 500px; /* Adjust the maximum width of the modal as needed */
   margin: auto;
-  background-color: #E3D6CE;
+  background-color: #e3d6ce;
   position: relative;
 }
 
 .modal-header {
   background-color: #866149;
-  color: #E3D6CE;
+  color: #e3d6ce;
   position: relative;
 }
 
@@ -107,12 +189,12 @@ export default {
   position: absolute;
   top: 0;
   right: 0;
-  color: #E3D6CE;
+  color: #e3d6ce;
   font-size: 100%;
   font-weight: bold;
   opacity: 0.8;
   margin-bottom: 1%;
-  transform: translateY(-10%)
+  transform: translateY(-10%);
 }
 
 .modal-body {
@@ -129,8 +211,8 @@ export default {
 }
 
 .confirm-button:hover {
-  background-color: #2F2821;
-  border-color: #2F2821;
+  background-color: #2f2821;
+  border-color: #2f2821;
 }
 
 .confirm-button:focus {

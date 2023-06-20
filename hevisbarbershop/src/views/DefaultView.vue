@@ -29,7 +29,7 @@
 <script>
 import Header from '../components/HeaderComponent.vue'
 import Modal from '../components/ModalComponent.vue'
-
+import { EventBus } from '../EventBus';
 export default {
   components: {
     Header,
@@ -52,7 +52,7 @@ export default {
         this.$refs.modal.openModal();
     },
     openShop(){
-      this.$emit('navigate', 'shop');
+      EventBus.emit('navigate', 'shop');
     }
   }
 }

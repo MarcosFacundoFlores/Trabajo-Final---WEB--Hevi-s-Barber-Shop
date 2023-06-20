@@ -3,8 +3,9 @@
     <div class="row">
       <div class="col" v-for="item in items" :key="item.id">
         <div class="card">
-          <img :src="item.image" class="card-img-top" alt="Product Image" />
+          <img :src="getImageUrl(item.image)" class="card-img-top" alt="Product Image" />
           <div class="card-body">
+            <h5 class="card-price">$ {{ item.price }}</h5>
             <h5 class="card-title">{{ item.name }}</h5>
             <div class="dropdown-container">
               <select class="form-select" v-model="item.selectedSize">
@@ -13,57 +14,125 @@
               </select>
               <button class="btn btn-primary btn-reserve" @click="reserve(item)">Reservar!</button>
             </div>
+            <div class="delete-container" v-if="isAdmin">
+              <button class="btn btn-danger btn-delete" @click="deleteItem(item.id)">X</button>
+            </div>
+
+            <div class="modify-container" v-if="isAdmin">
+              <button class="btn btn-danger btn-delete" @click="modifyItem(item.id)">Mod</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <!-- Button to Open Item Upload Modal -->
+  <ItemUploadFormComponent ref="modal"></ItemUploadFormComponent>
+  <button v-if="isAdmin" class="btn btn-primary btn-add-item" @click="openModal">Add Item</button>
 </template>
 
-
-
 <script>
+import axios from 'axios'
+import ItemUploadFormComponent from '../components/ItemUploadFormComponent.vue'
+
 export default {
+  components: {
+    ItemUploadFormComponent
+  },
   data() {
     return {
-      items: [
-        {
-          id: 1,
-          name: 'Item 1',
-          description: 'Description of Item 1',
-          image: 'path/to/item1-image.jpg',
-          sizes: ['Size 1', 'Size 2', 'Size 3'],
-          selectedSize: ''
-        },
-        {
-          id: 2,
-          name: 'Item 2',
-          description: 'Description of Item 2',
-          image: 'path/to/item2-image.jpg',
-          sizes: ['Size 4', 'Size 5', 'Size 6'],
-          selectedSize: ''
-        },
-        {
-          id: 3,
-          name: 'Item 3',
-          description: 'Description of Item 3',
-          image: 'path/to/item3-image.jpg',
-          sizes: ['Size 7', 'Size 8', 'Size 9'],
-          selectedSize: ''
-        }
-        // Add more items as needed
-      ]
+      items: [],
+      isAdmin: false, // Add a new data property to track the admin status
+      selectedItem: null
     }
   },
+  mounted() {
+    this.fetchItems()
+    this.checkAdminStatus()
+  },
   methods: {
+    checkAdminStatus() {
+      axios
+        .get('/api/check-admin') // Add a new API route to check admin status
+        .then((response) => {
+          this.isAdmin = response.data.isAdmin
+        })
+        .catch((error) => {
+          console.error('Error checking admin status:', error)
+        })
+    },
+    fetchItems() {
+      axios
+        .get('/api/items')
+        .then((response) => {
+          this.items = response.data.map((item) => {
+            // Replace backslashes with forward slashes in the image URL
+            item.image = item.image.replace(/\\/g, '/')
+
+            // Parse the sizes string into an array
+            item.sizes = JSON.parse(item.sizes)
+
+            return item
+          })
+        })
+        .catch((error) => {
+          console.error('Error fetching items:', error)
+        })
+    },
     reserve(item) {
-      console.log('Selected Item:', item);
+      console.log('Selected Item:', item)
+    },
+    handleItemUploaded(newItem) {
+      this.items.push(newItem)
+    },
+    openModal() {
+      this.$refs.modal.openModal()
+    },
+    getImageUrl(image) {
+      return `${image}`
+    },
+    deleteItem(itemId) {
+      axios
+        .delete(`/api/items/${itemId}`)
+        .then((response) => {
+          // Remove the deleted item from the items array
+          this.items = this.items.filter((item) => item.id !== itemId)
+        })
+        .catch((error) => {
+          console.error('Error deleting item:', error)
+        })
+    },
+    modifyItem(itemId) {
+      // Find the item by ID
+      this.selectedItem = JSON.parse(JSON.stringify(this.items.find((item) => item.id === itemId))) // Make a deep copy of the selected item
+
+      // Open the modal
+      this.$refs.modal.openModal(true, this.selectedItem) // Pass the selected item as an argument
     }
   }
 }
 </script>
 
 <style scoped>
+.delete-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.modify-container {
+  position: absolute;
+  top: 0;
+  right: 90;
+}
+.card {
+  position: relative; /* Ensure the card container is a positioned element */
+}
+.btn-add-item {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+}
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -87,6 +156,8 @@ export default {
 .card-img-top {
   flex-grow: 1;
   object-fit: cover; /* Adjust image sizing within the card */
+  max-width: 300px;
+  max-height: auto;
 }
 
 .card-body {
@@ -96,11 +167,12 @@ export default {
 .card-title {
   font-size: 1.5rem; /* Increase the title font size */
   font-weight: bold; /* Add bold font weight to the title */
-  margin-bottom: 0.75rem; /* Increase margin below the title */
+  margin-bottom: 0.5rem; /* Increase margin below the title */
+  margin-top: 0;
 }
 
-.card-text {
-  margin-bottom: 1.25rem; /* Increase margin below the description */
+.card-price {
+  margin-bottom: 0; /* Remove the bottom margin for the price */
 }
 
 .btn-primary {
@@ -137,5 +209,28 @@ export default {
 
 .btn-reserve {
   margin-top: 10px;
+}
+
+.btn-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 50%;
+  background-color: #dc3545;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+}
+
+.btn-delete:focus {
+  outline: none;
 }
 </style>

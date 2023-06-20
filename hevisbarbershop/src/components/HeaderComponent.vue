@@ -15,9 +15,11 @@
 </template>
 
 <script>
+import axios from 'axios';
 import logo from '@/assets/logo.png'
 
 export default {
+  
   data() {
     return {
       logo: logo
@@ -28,7 +30,16 @@ export default {
       this.$emit('navigate', page)
     },
     logout() {
-      console.log('Salir')
+      // Make an API request to clear the session on the server-side
+      // Here's an example using Axios:
+      axios.post('/api/logout')
+        .then(() => {
+          // Session cleared, redirect to login
+          this.$router.push('/login');
+        })
+        .catch((error) => {
+          // Handle logout error, show an error message, etc.
+        });
     }
   }
 }
