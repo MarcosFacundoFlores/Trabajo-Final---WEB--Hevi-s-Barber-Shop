@@ -12,12 +12,17 @@
                 <option disabled selected value="">{{ item.placeholder }}</option>
                 <option v-for="size in item.sizes" :key="size">{{ size }}</option>
               </select>
-              <button class="btn btn-primary btn-reserve" @click="reserve(item)">Reservar!</button>
+              <button
+                class="btn btn-primary btn-reserve"
+                @click="reserve(item)"
+                :disabled="item.isReserved"
+              >
+                Reservar!
+              </button>
             </div>
             <div class="delete-container" v-if="isAdmin">
               <button class="btn btn-danger btn-delete" @click="deleteItem(item.id)">X</button>
             </div>
-
             <div class="modify-container" v-if="isAdmin">
               <button class="btn btn-danger btn-delete" @click="modifyItem(item.id)">Mod</button>
             </div>
@@ -28,7 +33,20 @@
   </div>
   <!-- Button to Open Item Upload Modal -->
   <ItemUploadFormComponent ref="modal"></ItemUploadFormComponent>
+  <button v-if="isAdmin" class="btn btn-primary btn-view-pedidos" @click="viewPedidos">
+    Ver Pedidos
+  </button>
   <button v-if="isAdmin" class="btn btn-primary btn-add-item" @click="openModal">Add Item</button>
+
+  <div v-if="pedidos.length > 0">
+    <h2>Pedidos:</h2>
+    <ul>
+      <li v-for="pedido in pedidos" :key="pedido.id">
+        Pedido ID: {{ pedido.id }}, Item: {{ pedido.item }}, Usuario: {{ pedido.username }}
+        <button @click="deletePedido(pedido.id)">X</button>
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script>
@@ -43,12 +61,15 @@ export default {
     return {
       items: [],
       isAdmin: false, // Add a new data property to track the admin status
-      selectedItem: null
+      selectedItem: null,
+      userId: null,
+      pedidos: []
     }
   },
   mounted() {
     this.fetchItems()
     this.checkAdminStatus()
+    this.fetchUserId()
   },
   methods: {
     checkAdminStatus() {
@@ -59,6 +80,16 @@ export default {
         })
         .catch((error) => {
           console.error('Error checking admin status:', error)
+        })
+    },
+    fetchUserId() {
+      axios
+        .get('/api/userId') // Ruta para obtener el ID del usuario en sesión
+        .then((response) => {
+          this.userId = response.data.userId
+        })
+        .catch((error) => {
+          console.error('Error al obtener el ID del usuario:', error)
         })
     },
     fetchItems() {
@@ -81,6 +112,27 @@ export default {
     },
     reserve(item) {
       console.log('Selected Item:', item)
+
+      if (this.userId) {
+        const newPedido = {
+          item: item.id,
+          usuario: this.userId
+        }
+
+        axios
+          .post('/api/pedidos', newPedido)
+          .then((response) => {
+            console.log('Pedido created:', response.data)
+            alert("Pedido generado correctamente!")
+            item.isReserved = true // Set a flag to disable the button permanently
+            this.$forceUpdate() // Force update the component
+          })
+          .catch((error) => {
+            console.error('Error creating pedido:', error)
+          })
+      } else {
+        console.error('UserID not available')
+      }
     },
     handleItemUploaded(newItem) {
       this.items.push(newItem)
@@ -102,6 +154,31 @@ export default {
           console.error('Error deleting item:', error)
         })
     },
+    viewPedidos() {
+      axios
+        .get('/api/pedidos')
+        .then((response) => {
+          console.log('Pedidos:', response.data)
+          this.pedidos = response.data // Store the fetched pedidos in the 'pedidos' data property
+        })
+        .catch((error) => {
+          console.error('Error fetching pedidos:', error)
+        })
+    },
+
+    deletePedido(pedidoId) {
+      axios
+        .delete(`/api/pedidos/${pedidoId}`)
+        .then((response) => {
+          console.log('Pedido deleted:', response.data)
+          // Remove the deleted pedido from the pedidos array
+          this.pedidos = this.pedidos.filter((pedido) => pedido.id !== pedidoId)
+        })
+        .catch((error) => {
+          console.error('Error deleting pedido:', error)
+        })
+    },
+
     modifyItem(itemId) {
       // Find the item by ID
       this.selectedItem = JSON.parse(JSON.stringify(this.items.find((item) => item.id === itemId))) // Make a deep copy of the selected item
@@ -131,6 +208,12 @@ export default {
 .btn-add-item {
   position: fixed;
   bottom: 20px;
+  right: 20px;
+}
+
+.btn-view-pedidos {
+  position: fixed;
+  bottom: 60px;
   right: 20px;
 }
 .row {
