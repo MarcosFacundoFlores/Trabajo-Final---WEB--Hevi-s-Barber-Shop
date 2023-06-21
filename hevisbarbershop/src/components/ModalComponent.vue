@@ -15,20 +15,21 @@
                 <h3>Selecciona una fecha:</h3>
                 <div class="calendar-container">
                   <VueDatePicker
-                    v-model="selectedDate"
                     minutes-increment="30"
+                    locale="es-ES"
+                    inline
                     time-picker-inline
                     no-hours-overlay
                     no-minutes-overlay
-                    inline
-                    locale="es-ES"
-                    :flow="flow"
                     :min-date="startDate"
                     :max-date="endDate"
                     :min-time="minTime"
                     :max-time="maxTime"
                     :disabled-week-days="[0]"
+                    :start-time="startTime"
+                    :disabled-dates="isDateDisabled"
                     :disabled-times="isTimeDisabled"
+                    @update:model-value="confirmarTurno"
                   ></VueDatePicker>
                 </div>
               </div>
@@ -62,42 +63,59 @@ export default {
       endDate: new Date(new Date().setDate(new Date().getDate() + 31)),
       minTime: { hours: 9, minutes: 0 },
       maxTime: { hours: 21, minutes: 0 },
-      isTimeDisabled: null,
-      disabledTimes: []
+      startTime: { hours: 9, minutes: 0 },
+      disabledDates: []
     }
   },
   mounted() {
     this.fetchDisabledDates()
     this.fetchUserId()
-    this.fetchDisabledTimes()
+    // this.fetchDisabledTimes()
   },
   methods: {
-    fetchDisabledTimes() {
+    // fetchDisabledTimes() {
+    //   axios
+    //     .get('/api/turnos')
+    //     .then((response) => {
+    //       this.disabledTimes = response.data.map((turno) => {
+    //         const fecha = new Date(turno.fecha)
+    //         const formattedTime = fecha.getHours() + ':' + fecha.getMinutes()
+    //         return formattedTime
+    //       })
+    //     })
+    //     .catch((error) => {
+    //       console.error('Error fetching disabled times:', error)
+    //     })
+    // },
+    fetchDisabledDates() {
       axios
         .get('/api/turnos')
         .then((response) => {
-          this.disabledTimes = response.data.map((turno) => {
+          this.disabledDates = response.data.map((turno) => {
             const fecha = new Date(turno.fecha)
-            const formattedTime = fecha.getHours() + ':' + fecha.getMinutes()
-            return formattedTime
+            return moment(fecha).format('YYYY-MM-DD HH:mm:ss')
           })
         })
         .catch((error) => {
-          console.error('Error fetching disabled times:', error)
+          console.error('Error fetching disabled dates:', error)
         })
+    },
+
+    isDateDisabled(value) {
+      const formattedFecha = moment(value).format('YYYY-MM-DD HH:mm:ss')
+
+      return this.disabledDates.includes(formattedFecha)
     },
 
     isTimeDisabled(value) {
       const hour = value.hours
-      const minutes = value.minutes
-      const formattedTime = hour + ':' + minutes
-      return (
-        hour >= 13 &&
-        hour < 17 && // Disable hours between 13:00 and 17:00
-        minutes !== 0 &&
-        minutes !== 30 && // Disable times with minutes other than 00 or 30
-        this.disabledTimes.includes(formattedTime) // Disable times that are already stored in the database
-      )
+
+      // Disable times between 13:00 and 17:00
+      if (hour >= 13 && hour < 17) {
+        return true
+      }
+
+      return false
     },
 
     fetchUserId() {
@@ -110,24 +128,20 @@ export default {
           console.error('Error al obtener el ID del usuario:', error)
         })
     },
-    fetchDisabledDates() {
-      axios
-        .get('/api/turnos')
-        .then((response) => {
-          this.disabledDates = response.data.map((turno) => turno.fecha)
-        })
-        .catch((error) => {
-          console.error('Error al obtener las fechas deshabilitadas:', error)
-        })
-    },
-    confirmarTurno() {
-      console.log(this.selectedDate)
-      const formattedHora = moment(this.selectedTime, 'h:mm A').format('HH:mm')
-      const formattedFecha = moment(this.selectedDate).format('YYYY-MM-DD')
+    confirmarTurno(value) {
+      console.log(this.disabledDates)
+      console.log(value)
+      this.selectedDate = value
+      if (!this.selectedDate || !this.userId) {
+        console.error('Falta información requerida')
+        return
+      }
+
+      const formattedFecha = moment(this.selectedDate).format('YYYY-MM-DD HH:mm:ss')
+      console.log(formattedFecha)
       const nuevoTurno = {
         fecha: formattedFecha,
-        hora: formattedHora,
-        usuario: this.userId // Agrega el ID del usuario al objeto nuevoTurno
+        usuario: this.userId
       }
 
       axios
@@ -135,6 +149,7 @@ export default {
         .then((response) => {
           console.log(response.data.mensaje) // Mensaje de confirmación del servidor
           // Realiza cualquier acción adicional después de confirmar el turno
+          alert("Turno agendado con éxito!")
         })
         .catch((error) => {
           console.error('Error al confirmar el turno:', error)

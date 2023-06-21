@@ -7,7 +7,7 @@
       <ShopView v-if="currentView === 'shop'" />
     </div>
     <div v-else>
-      <h2>Please log in to access the content.</h2>
+      <h2 class="logout-warning">PRESIONE SALIR E INGRESE CON USUARIO Y CONTRASEÑA VÁLIDOS</h2>
       <!-- You can optionally show a login form here -->
     </div>
   </div>
@@ -70,5 +70,8 @@ export default {
   height: calc(100vh - 60px); /* Ajusta la altura según el tamaño del header */
 }
 
+.logout-warning{
+  color: red;
+}
 
 </style>
