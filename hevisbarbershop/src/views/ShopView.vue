@@ -3,7 +3,15 @@
     <div class="row">
       <div class="col" v-for="item in items" :key="item.id">
         <div class="card">
-          <img :src="getImageUrl(item.image)" class="card-img-top" alt="Product Image" />
+          <div class="card-img-container">
+            <img :src="getImageUrl(item.image)" class="card-img-top" alt="Product Image" />
+          </div>
+          <div class="delete-container" v-if="isAdmin">
+            <button class="btn btn-danger btn-delete" @click="deleteItem(item.id)">X</button>
+          </div>
+          <div class="modify-container" v-if="isAdmin">
+            <button class="btn btn-danger btn-modify" @click="modifyItem(item.id)">Mod</button>
+          </div>
           <div class="card-body">
             <h5 class="card-price">$ {{ item.price }}</h5>
             <h5 class="card-title">{{ item.name }}</h5>
@@ -20,25 +28,20 @@
                 Reservar!
               </button>
             </div>
-            <div class="delete-container" v-if="isAdmin">
-              <button class="btn btn-danger btn-delete" @click="deleteItem(item.id)">X</button>
-            </div>
-            <div class="modify-container" v-if="isAdmin">
-              <button class="btn btn-danger btn-delete" @click="modifyItem(item.id)">Mod</button>
-            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
   <!-- Button to Open Item Upload Modal -->
-  <ItemUploadFormComponent ref="modal"></ItemUploadFormComponent>
+  <Modal ref="modal"><ItemUploadFormComponent ref="form"></ItemUploadFormComponent></Modal>
+
   <button v-if="isAdmin" class="btn btn-primary btn-view-pedidos" @click="viewPedidos">
     Ver Pedidos
   </button>
-  <button v-if="isAdmin" class="btn btn-primary btn-add-item" @click="openModal">Add Item</button>
+  <button v-if="isAdmin" class="btn btn-primary btn-add-item" @click="openModal">Añadir Item</button>
 
-  <div v-if="pedidos.length > 0">
+  <Modal ref="modalpedidos">
     <h2>Pedidos:</h2>
     <ul>
       <li v-for="pedido in pedidos" :key="pedido.id">
@@ -46,16 +49,19 @@
         <button @click="deletePedido(pedido.id)">X</button>
       </li>
     </ul>
-  </div>
+  </Modal>
 </template>
 
 <script>
 import axios from 'axios'
 import ItemUploadFormComponent from '../components/ItemUploadFormComponent.vue'
+import Modal from '../components/ModalComponent.vue'
+import { inject } from 'vue';
 
 export default {
   components: {
-    ItemUploadFormComponent
+    ItemUploadFormComponent,
+    Modal
   },
   data() {
     return {
@@ -68,20 +74,10 @@ export default {
   },
   mounted() {
     this.fetchItems()
-    this.checkAdminStatus()
     this.fetchUserId()
+    this.isAdmin = inject('isAdmin')
   },
   methods: {
-    checkAdminStatus() {
-      axios
-        .get('/api/check-admin') // Add a new API route to check admin status
-        .then((response) => {
-          this.isAdmin = response.data.isAdmin
-        })
-        .catch((error) => {
-          console.error('Error checking admin status:', error)
-        })
-    },
     fetchUserId() {
       axios
         .get('/api/userId') // Ruta para obtener el ID del usuario en sesión
@@ -123,7 +119,7 @@ export default {
           .post('/api/pedidos', newPedido)
           .then((response) => {
             console.log('Pedido created:', response.data)
-            alert("Pedido generado correctamente!")
+            alert('Pedido generado correctamente!')
             item.isReserved = true // Set a flag to disable the button permanently
             this.$forceUpdate() // Force update the component
           })
@@ -139,6 +135,7 @@ export default {
     },
     openModal() {
       this.$refs.modal.openModal()
+      this.$refs.form.openModal()
     },
     getImageUrl(image) {
       return `${image}`
@@ -164,6 +161,7 @@ export default {
         .catch((error) => {
           console.error('Error fetching pedidos:', error)
         })
+      this.$refs.modalpedidos.openModal()
     },
 
     deletePedido(pedidoId) {
@@ -184,27 +182,14 @@ export default {
       this.selectedItem = JSON.parse(JSON.stringify(this.items.find((item) => item.id === itemId))) // Make a deep copy of the selected item
 
       // Open the modal
-      this.$refs.modal.openModal(true, this.selectedItem) // Pass the selected item as an argument
+      this.$refs.modal.openModal() // Pass the selected item as an argument
+      this.$refs.form.openModal(true, this.selectedItem)
     }
   }
 }
 </script>
 
 <style scoped>
-.delete-container {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-.modify-container {
-  position: absolute;
-  top: 0;
-  right: 90;
-}
-.card {
-  position: relative; /* Ensure the card container is a positioned element */
-}
 .btn-add-item {
   position: fixed;
   bottom: 20px;
@@ -228,19 +213,28 @@ export default {
 }
 
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
+  width: 300px;
   height: 100%;
   border: 1px solid #ddd; /* Add border for card */
   border-radius: 8px; /* Add border-radius for rounded corners */
   overflow: hidden; /* Hide any content that overflows the card */
 }
 
+.card-img-container {
+  position: relative;
+  width: 100%;
+  padding-top: 75%;
+}
 .card-img-top {
-  flex-grow: 1;
-  object-fit: cover; /* Adjust image sizing within the card */
-  max-width: 300px;
-  max-height: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .card-body {
@@ -294,10 +288,20 @@ export default {
   margin-top: 10px;
 }
 
-.btn-delete {
+.delete-container {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 0;
+  right: 0;
+}
+
+.modify-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.btn-delete,
+.btn-modify {
   padding: 0;
   width: 30px;
   height: 30px;
@@ -309,11 +313,13 @@ export default {
   font-size: 14px;
 }
 
-.btn-delete:hover {
+.btn-delete:hover,
+.btn-modify:hover {
   background-color: #c82333;
 }
 
-.btn-delete:focus {
+.btn-delete:focus,
+.btn-modify:focus {
   outline: none;
 }
 </style>

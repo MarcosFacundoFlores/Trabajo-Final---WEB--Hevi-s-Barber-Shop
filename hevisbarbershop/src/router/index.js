@@ -15,6 +15,10 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
     },
+    {
+      path: '/:catchAll(.*)', // Wildcard route to catch all undefined routes
+      redirect: '/login' // Redirect to /login
+    }
   ]
 });
 
