@@ -1,17 +1,15 @@
 <template>
   <div>
     <Header @navigate="switchView" />
-    <transition name="fade">
-      <div v-if="isLoggedIn" class="content">
-        <DefaultView v-if="currentView === 'default'" />
-        <ShopView v-if="currentView === 'shop'" />
-        <InfoView v-if="currentView === 'info'" />
-      </div>
-      <div v-else>
-        <h2 class="logout-warning">PRESIONE SALIR E INGRESE CON USUARIO Y CONTRASEÑA VÁLIDOS</h2>
-        <!-- You can optionally show a login form here -->
-      </div>
-    </transition>
+    <div v-if="isLoggedIn" class="content">
+      <DefaultView v-if="currentView === 'default'" />
+      <ShopView v-if="currentView === 'shop'" />
+      <InfoView v-if="currentView === 'info'" />
+    </div>
+    <div v-else>
+      <h2 class="logout-warning">PRESIONE SALIR E INGRESE CON USUARIO Y CONTRASEÑA VÁLIDOS</h2>
+      <!-- You can optionally show a login form here -->
+    </div>
   </div>
 </template>
 
@@ -103,15 +101,5 @@ export default {
 
 .logout-warning {
   color: red;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>
